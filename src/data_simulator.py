@@ -1,9 +1,6 @@
-import sys
-import time
 import numpy as np
 import pandas as pd
 import random
-from globals import CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
 
 
 def generate_customer_profiles_table(n_customers, random_state=0):
@@ -177,6 +174,7 @@ def add_frauds(customer_profiles_table, terminal_profiles_table, transactions_df
     since the card is only temporarily compromised, additional strategies that involve concept drift should also
     be designed.
     """
+
     # By default, all transactions are genuine
     transactions_df['TX_FRAUD'] = 0
     transactions_df['TX_FRAUD_SCENARIO'] = 0
@@ -207,58 +205,11 @@ def add_frauds(customer_profiles_table, terminal_profiles_table, transactions_df
         nb_compromised_transactions = len(compromised_transactions)
 
         random.seed(day)
-        index_frauds = random.sample(list(compromised_transactions.index.values), k=int(nb_compromised_transactions / 3))
+        index_frauds = random.sample(list(compromised_transactions.index.values),
+                                     k=int(nb_compromised_transactions / 3))
 
         transactions_df.loc[index_frauds, 'TX_AMOUNT'] = transactions_df.loc[index_frauds, 'TX_AMOUNT'] * 5
         transactions_df.loc[index_frauds, 'TX_FRAUD'] = 1
         transactions_df.loc[index_frauds, 'TX_FRAUD_SCENARIO'] = 3
 
     return transactions_df
-
-def generate_dataset(n_customers, n_terminals, nb_days, start_date, r):
-    """Generate the dataset."""
-
-    print("Starting generating dataset...")
-    start_time = time.time()
-
-    customer_profiles_table = generate_customer_profiles_table(n_customers, random_state=0)
-
-    terminal_profiles_table = generate_terminal_profiles_table(n_terminals, random_state=1)
-
-    x_y_terminals = terminal_profiles_table[['x_terminal_id', 'y_terminal_id']].values.astype(float)
-    customer_profiles_table['available_terminals'] = customer_profiles_table.apply(
-        lambda x: get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=r), axis=1)
-    customer_profiles_table['nb_terminals'] = customer_profiles_table.available_terminals.apply(len)
-
-    transactions_df = customer_profiles_table.groupby('CUSTOMER_ID').apply(
-        lambda x: generate_transactions_table(x.iloc[0], start_date, nb_days)).reset_index(drop=True)
-
-    # Sort transactions chronologically
-    transactions_df = transactions_df.sort_values('TX_DATETIME')
-    # Reset indices, starting from 0
-    transactions_df.reset_index(inplace=True, drop=True)
-    transactions_df.reset_index(inplace=True)
-    # TRANSACTION_ID are the dataframe indices, starting from 0
-    transactions_df.rename(columns={'index': 'TRANSACTION_ID'}, inplace=True)
-
-    # Adds fraudulent transactions to the dataset
-    transactions_df = add_frauds(customer_profiles_table, terminal_profiles_table, transactions_df)
-
-    print("Dataset generated: {0:.2}s".format(time.time() - start_time))
-
-    return customer_profiles_table, terminal_profiles_table, transactions_df
-
-
-#####
-
-datasets=generate_dataset(
-    n_customers=CUSTOMERS_NUM,
-    n_terminals=TERMINALS_NUM,
-    start_date=START_DATE,
-    nb_days=5,
-    r=R,
-)
-
-print(datasets[0])
-print(datasets[1])
-print(datasets[2])
