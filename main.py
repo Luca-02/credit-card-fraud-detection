@@ -1,6 +1,6 @@
-from src.generator import Generator
+from script.generator import Generator
 from config import DATASET_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
-from src.logger import logger
+from common.logger import logger
 
 
 def main():

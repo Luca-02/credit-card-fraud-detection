@@ -1,6 +1,6 @@
 import os
 import shutil
-from src.logger import logger
+from common.logger import logger
 
 
 def clear_dir_path(path):

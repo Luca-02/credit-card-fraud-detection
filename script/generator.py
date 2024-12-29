@@ -1,8 +1,8 @@
 import os
 import time
-import src.data_simulator as data_simulator
-from src.utils import clear_dir_path
-from src.logger import logger
+import script.data_simulator as data_simulator
+from common.utils import clear_dir_path
+from common.logger import logger
 
 
 class Generator:
