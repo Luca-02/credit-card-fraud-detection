@@ -1,5 +1,6 @@
 import os
 
+
 CUSTOMERS_NUM = 5000
 """Represents the number of customer to generate."""
 
@@ -12,10 +13,10 @@ START_DATE = '2018-04-01'
 R = 5
 """Represents the radius within which customers must be located in order to be associated with a terminal."""
 
-project_root = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-DATASET_OUTPUT_DIR = os.path.join(project_root, ".output", "dataset")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, ".output")
 
-DATASET_TEST_OUTPUT_DIR = os.path.join(project_root, ".output", "dataset_test")
+DATASET_OUTPUT_DIR = os.path.join(OUTPUT_DIR, "dataset")
 
-LOG_DIR = os.path.join(project_root, ".output", "log")
+LOG_DIR = os.path.join(OUTPUT_DIR, "log")

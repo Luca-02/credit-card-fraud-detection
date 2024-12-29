@@ -1,7 +1,8 @@
 import os
-import shutil
 import time
-import data_simulator
+import src.data_simulator as data_simulator
+from src.utils import clear_dir_path
+from src.logger import logger
 
 
 class Generator:
@@ -47,24 +48,12 @@ class Generator:
         return customer_profiles_table, terminal_profiles_table, transactions_df
 
     def generate(self, arr_nb_days):
-        # Delete all contents of the folder DATASET_DIR_OUTPUT
-        if os.path.exists(self.dataset_output_path):
-            for filename in os.listdir(self.dataset_output_path):
-                file_path = os.path.join(self.dataset_output_path, filename)
-                try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)
-                except Exception as e:
-                    print('Failed to delete %s. Reason: %s' % (file_path, e))
+        clear_dir_path(self.dataset_output_path)
 
         for index, nb_days in enumerate(arr_nb_days):
             start_time = time.time()
-            print(f"##### Generating dataset {index} [nb_days: {nb_days}] #####")
-
             customer_profiles, terminal_profiles, transactions_df = self.create_dataset(nb_days)
-            print(f"[GENERATED] Time to generate dataset {index}: {time.time() - start_time:.2f}s")
+            logger.info(f"Time to generate dataset '{index}' [nb_days: {nb_days}]: {time.time() - start_time:.2f}s")
 
             dataset_subdir = os.path.join(self.dataset_output_path, str(index + 1))
             if not os.path.exists(dataset_subdir):

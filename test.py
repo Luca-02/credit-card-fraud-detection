@@ -1,19 +1,19 @@
 from src.generator import Generator
-from config import DATASET_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
+from config import DATASET_OUTPUT_DIR
 from src.logger import logger
 
 
 def main():
     generator = Generator(
         dataset_output_path=DATASET_OUTPUT_DIR,
-        n_customers=CUSTOMERS_NUM,
-        n_terminals=TERMINALS_NUM,
-        start_date=START_DATE,
-        r=R
+        n_customers=10,
+        n_terminals=5,
+        start_date='2018-04-01',
+        r=50
     )
 
     logger.info(f"[START DATASETS GENERATION]")
-    nb_days = 100
+    nb_days = 5
     generator.generate(arr_nb_days=[nb_days, nb_days * 2, nb_days * 4])
     logger.info(f"[FINISH DATASETS GENERATION]")
 
