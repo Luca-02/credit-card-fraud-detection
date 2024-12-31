@@ -89,6 +89,9 @@ def get_list_terminals_within_radius(customer_profile, x_y_terminals, r):
     # Get the indices of terminals which are at a distance less than r
     available_terminals = list(np.where(dist_x_y < r)[0])
 
+    # Convert all terminal indices to normal Python integers (int)
+    available_terminals = [int(terminal) for terminal in available_terminals]
+
     # Return the list of terminal IDs
     return available_terminals
 

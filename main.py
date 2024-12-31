@@ -5,17 +5,19 @@ from common.logger import logger
 
 def main():
     generator = Generator(
-        dataset_output_path=DATASET_OUTPUT_DIR,
         n_customers=CUSTOMERS_NUM,
         n_terminals=TERMINALS_NUM,
         start_date=START_DATE,
         r=R
     )
 
-    logger.info(f"[START DATASETS GENERATION]")
-    nb_days = 100
-    generator.generate(arr_nb_days=[nb_days, nb_days * 2, nb_days * 4])
-    logger.info(f"[FINISH DATASETS GENERATION]")
+    initial_nb_days = 100
+    initial_estimated_mb_size = 50
+    for multiplier in [1, 2, 4]:
+        nb_days = initial_nb_days * multiplier
+        estimated_mb_size = initial_estimated_mb_size * multiplier
+        result = generator.generate(DATASET_OUTPUT_DIR, nb_days, dataset_name=f"dataset_{estimated_mb_size}")
+        logger.info(f"Time to generate dataset '{result["dataset_name"]}': {result["generation_time"]:.2f}s")
 
 
 if __name__ == "__main__":
