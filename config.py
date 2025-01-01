@@ -7,7 +7,7 @@ CUSTOMERS_NUM = 5000
 TERMINALS_NUM = 3000
 """Represents the number of terminals to generate."""
 
-START_DATE = '2018-04-01'
+START_DATE = '2025-01-01'
 """Represents the starting date of the transactions."""
 
 R = 5

@@ -1,6 +1,7 @@
 from script.generator import Generator
-from config import DATASET_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
+from config import OUTPUT_DIR, DATASET_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
 from common.logger import logger
+from common.utils import clear_dir_path
 
 
 def main():
@@ -10,6 +11,8 @@ def main():
         start_date=START_DATE,
         r=R
     )
+
+    clear_dir_path(OUTPUT_DIR)
 
     initial_nb_days = 100
     initial_estimated_mb_size = 50
