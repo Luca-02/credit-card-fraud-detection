@@ -1,6 +1,4 @@
 import os
-import ast
-import pandas as pd
 from script.database import DatabaseInstance
 
 
@@ -44,18 +42,14 @@ def __load_customers(tx, dataset_path):
 def __load_transactions(tx, dataset_path):
     query = """
     LOAD CSV WITH HEADERS FROM $file_path AS row
-    MERGE (tx:Transaction {
+    MATCH (c:Customer {customer_id: toInteger(row.CUSTOMER_ID)})
+    MATCH (t:Terminal {terminal_id: toInteger(row.TERMINAL_ID)})
+    MERGE (c)-[:TRANSACTION {
         transaction_id: toInteger(row.TRANSACTION_ID),
         datetime: datetime(replace(row.TX_DATETIME, ' ', 'T')),
         amount: toFloat(row.TX_AMOUNT),
         fraudulent: toInteger(row.TX_FRAUD) = 1
-    })
-
-    WITH tx, toInteger(row.CUSTOMER_ID) AS customer_id, toInteger(row.TERMINAL_ID) AS terminal_id
-    MATCH (c:Customer {customer_id: customer_id})
-    MATCH (t:Terminal {terminal_id: terminal_id})
-    MERGE (c)-[:MAKE]->(tx)
-    MERGE (tx)-[:FROM]->(t)
+    }]->(t)
     """
 
     transactions_path = os.path.join(dataset_path, "transactions.csv")

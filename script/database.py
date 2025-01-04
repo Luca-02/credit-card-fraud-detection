@@ -10,7 +10,9 @@ class DatabaseInstance:
         self.__driver = GraphDatabase.driver(self.__uri, auth=(self.__user, self.__password))
 
     def get_session(self):
-        return self.__driver.session(database=self.__database)
+        if self.__driver is not None:
+            return self.__driver.session(database=self.__database)
+        return None
 
     def close(self):
         if self.__driver is not None:

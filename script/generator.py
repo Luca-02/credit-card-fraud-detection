@@ -67,16 +67,13 @@ class Generator:
         if not dataset_name:
             dataset_name = f'nb_days_{nb_days}'
 
-        start_time1 = time.time()
+        start_time = time.time()
         customer_profiles, terminal_profiles, transactions_df = self.__create_dataset(nb_days)
 
         dataset_subdir = os.path.join(dataset_output_path, dataset_name)
         if not os.path.exists(dataset_subdir):
             os.makedirs(dataset_subdir)
 
-        print(f"Time to generate datasets {dataset_name}: {time.time() - start_time1:.2}s")
-
-        start_time2 = time.time()
         customer_profiles_path = os.path.join(dataset_subdir, "customer_profiles.csv")
         terminal_profiles_path = os.path.join(dataset_subdir, "terminal_profiles.csv")
         transactions_path = os.path.join(dataset_subdir, "transactions.csv")
@@ -85,11 +82,8 @@ class Generator:
         terminal_profiles.to_csv(terminal_profiles_path, index=False)
         transactions_df.to_csv(transactions_path, index=False)
 
-        print(f"Time to save datasets {dataset_name} .csv files locally: {time.time() - start_time2:.2}s")
-
         return {
             "dataset_name": dataset_name,
             "dataset_paths": dataset_subdir,
-            "generation_time": time.time() - start_time1,
-            "csv_saving_time": time.time() - start_time2
+            "generation_time": time.time() - start_time
         }
