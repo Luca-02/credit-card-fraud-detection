@@ -1,5 +1,6 @@
 import os
 import time
+
 import script.data_simulator as data_simulator
 
 
@@ -21,24 +22,25 @@ class Generator:
 
         start_time = time.time()
         customer_profiles_table = data_simulator.generate_customer_profiles_table(self.__n_customers, random_state=0)
-        print(f"Time to generate customer profiles table: {time.time() - start_time:.2}s")
+        print(f"Time to generate customer profiles table: {time.time() - start_time:.3f}s")
 
         start_time = time.time()
         terminal_profiles_table = data_simulator.generate_terminal_profiles_table(self.__n_terminals, random_state=1)
-        print(f"Time to generate terminal profiles table: {time.time() - start_time:.2}s")
+        print(f"Time to generate terminal profiles table: {time.time() - start_time:.3f}s")
 
         start_time = time.time()
         x_y_terminals = terminal_profiles_table[['x_terminal_id', 'y_terminal_id']].values.astype(float)
         customer_profiles_table['available_terminals'] = customer_profiles_table.apply(
-            lambda x: data_simulator.get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=self.__r), axis=1)
+            lambda x: data_simulator.get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=self.__r),
+            axis=1)
         customer_profiles_table['nb_terminals'] = customer_profiles_table.available_terminals.apply(len)
-        print(f"Time to associate terminals to customers: {time.time() - start_time:.2}s")
+        print(f"Time to associate terminals to customers: {time.time() - start_time:.3f}s")
 
         start_time = time.time()
         transactions_df = (customer_profiles_table.groupby('CUSTOMER_ID').apply(
             lambda x: data_simulator.generate_transactions_table(
                 x.iloc[0], self.__start_date, nb_days)).reset_index(drop=True))
-        print(f"Time to generate transactions: {time.time() - start_time:.2}s")
+        print(f"Time to generate transactions: {time.time() - start_time:.3f}s")
 
         # Sort transactions chronologically
         transactions_df = transactions_df.sort_values('TX_DATETIME')
@@ -53,7 +55,7 @@ class Generator:
 
         return customer_profiles_table, terminal_profiles_table, transactions_df
 
-    def generate(self, dataset_output_path: str, nb_days: int, dataset_name: str = None) -> dict:
+    def generate(self, dataset_output_path: str, nb_days: int, dataset_name: str = None) -> dict[str, str | float]:
         """
         Generates a dataset for a specific number of days and saves it to disk at the specified path.
 
@@ -69,6 +71,7 @@ class Generator:
 
         start_time = time.time()
         customer_profiles, terminal_profiles, transactions_df = self.__create_dataset(nb_days)
+        generation_time = time.time() - start_time
 
         dataset_subdir = os.path.join(dataset_output_path, dataset_name)
         if not os.path.exists(dataset_subdir):
@@ -82,8 +85,9 @@ class Generator:
         terminal_profiles.to_csv(terminal_profiles_path, index=False)
         transactions_df.to_csv(transactions_path, index=False)
 
+        print(f"Time to generate and save dataset: {time.time() - start_time:.3f}s")
+
         return {
-            "dataset_name": dataset_name,
             "dataset_paths": dataset_subdir,
-            "generation_time": time.time() - start_time
+            "generation_time": generation_time
         }

@@ -1,8 +1,4 @@
-a) For each customer X, identify the customer Y (or the costumers) that share at least 3
-terminals in which Y executes transactions and the spending amount of Y differs less than
-the 10% with respect to that of X. Return the name of X, the spending amount of X, the
-spending amount of the related costumer Y and the spending amount of Y.
-
+a)
 MATCH (x:Customer)-[:ACCESS_TO]->(t:Terminal)<-[:TRANSACTION]-(y:Customer)
 WHERE x <> y
 WITH x, y, COUNT(DISTINCT t) AS shared_terminals
@@ -14,10 +10,11 @@ WITH x, y, SUM(tx_x.amount) AS amount_x, SUM(tx_y.amount) AS amount_y
 WHERE ABS(amount_x - amount_y) / amount_x < 0.1
 RETURN x.customer_id AS customer_x, amount_x, y.customer_id AS customer_y, amount_y
 
-b) For each terminal identify the possible fraudulent transactions of the current month. The
-fraudulent transactions are those whose import is higher than 20% of the average import of
-the transactions executed on the same terminal in the previous month.
+si potrebbe salvare con computational pattern il total_amount delle transazioni di ogni
+customer al posto di andarle a calcolare ogni volta
 
+
+b)
 WITH date() AS current_date, date() - duration({months: 1}) AS prev_month_date
 
 // Trova tutte le transazioni del mese precedente per ciascun terminal
@@ -36,13 +33,9 @@ WITH t, avg_amount_last_month, tx
 WHERE tx.amount - avg_amount_last_month / avg_amount_last_month > 0.2
 RETURN t.terminal_id AS terminal_id, COLLECT(tx.transaction_id) AS possible_fraudulent_transaction
 
-c) Given a user u, determine the “co-customer-relationships CC of degree k”. A user u’ is a co-customer of u if you
-can determine a chain “u1-t1-u2-t2-…tk-1-uk“ such that u1=u, uk=u’, and for each 1<=I,j<=k, ui <> uj, and t1,..tk-1
-are the terminals on which a transaction has been executed.
-Therefore, CCk(u)={u’| a chain exists between u and u’ of degree k}. Please, note that depending on the adopted model,
-the computation of CCk(u) could be quite complicated.
-Consider therefore at least the computation of CC3(u) (i.e. the co-costumer relationships of degree 3).
 
+
+c)
 MATCH (u1:Customer {customer_id: 0})-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u2:Customer)
 WHERE u1.customer_id <> u2.customer_id
 WITH DISTINCT u2, [u1.customer_id, u2.customer_id] as path_customers
@@ -58,3 +51,41 @@ WITH DISTINCT u4, path_customers + u4.customer_id as path_customers
 ...
 
 RETURN DISTINCT uk AS co_customer
+
+
+
+d.i)
+MATCH ()-[tx:TRANSACTION]->()
+WITH tx, time(tx.datetime).hour AS tx_hour, rand() AS products
+SET tx.period_of_day = CASE
+    WHEN tx_hour >= 6 AND tx_hour < 12 THEN 'morning'
+    WHEN tx_hour >= 12 AND tx_hour < 18 THEN 'afternoon'
+    WHEN tx_hour >= 18 AND tx_hour < 22 THEN 'evening'
+    ELSE 'night'
+END,
+tx.product_type = CASE
+    WHEN products < 0.2 THEN 'hightech'
+    WHEN products < 0.4 THEN 'food'
+    WHEN products < 0.6 THEN 'clothing'
+    WHEN products < 0.8 THEN 'consumable'
+    ELSE 'other'
+END,
+tx.security_feeling = toInteger(rand() * 5) + 1
+
+
+
+d.ii)
+MATCH (c1:Customer)-[tx1:TRANSACTION]->(t:Terminal)<-[tx2:TRANSACTION]-(c2:Customer)
+WHERE c1 <> c2
+WITH c1, c2,
+     COUNT(DISTINCT tx1) AS tx1_count, COUNT(DISTINCT tx2) AS tx2_count,
+     AVG(tx1.security_feeling) AS c1_avg_security, AVG(tx2.security_feeling) AS c2_avg_security
+WHERE tx1_count > 3 AND tx2_count > 3 AND ABS(c1_avg_security - c2_avg_security) < 1
+MERGE (c1)-[:BUYING_FRIENDS]->(c2)
+
+e)
+// In questo caso la media delle transazioni fraudolente per ogni periodo del giorno corrisponde
+// alla percentuale di transazioni fraudolente per ogni periodo del giorno.
+MATCH ()-[tx:TRANSACTION]->()
+RETURN tx.period_of_day AS period_of_day, COUNT(tx) AS transactions,
+    AVG(CASE WHEN tx.fraudulent THEN 1 ELSE 0 END) AS avg_fraudulent_transactions

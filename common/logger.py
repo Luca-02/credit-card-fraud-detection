@@ -1,12 +1,11 @@
 import logging
 import os
-from config import LOG_DIR
+from config import OUTPUT_DIR
 
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
-
-log_file = os.path.join(LOG_DIR, 'app.log')
+log_file = os.path.join(OUTPUT_DIR, 'app.log')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
