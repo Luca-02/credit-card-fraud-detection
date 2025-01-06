@@ -1,10 +1,17 @@
 import os
 import time
+
 from script.database import DatabaseInstance
 
 
 class Loader:
     def __init__(self, db: DatabaseInstance):
+        """
+        A class to handle datasets load in the database.
+
+        :param db: Database instance.
+        """
+
         self.db = db
 
     @staticmethod
@@ -59,6 +66,13 @@ class Loader:
         tx.run(query, file_path=f"file:///{transactions_path.replace(os.sep, '/')}")
 
     def load_dataset(self, dataset_path: str) -> float:
+        """
+        Load the datasets located in the specified dataset_path in the database.
+
+        :param dataset_path: path where the datasets to load is stored.
+        :return: Loading execution time in seconds.
+        """
+
         with self.db.get_session() as session:
             # Delete all existing nodes and relationships in the database
             session.run("MATCH (n) DETACH DELETE n")
@@ -70,9 +84,12 @@ class Loader:
             start_time = time.time()
 
             session.execute_write(self.__load_terminals, terminal_profiles_path)
-            session.execute_write(self.__load_customers, customer_profiles_path)
-            session.execute_write(self.__load_transactions, transactions_path)
+            print(f"Time to load terminal profiles table: {time.time() - start_time:.3f}s")
 
-            print(f"Time to load dataset: {time.time() - start_time:.3f}s")
+            session.execute_write(self.__load_customers, customer_profiles_path)
+            print(f"Time to load customer profiles table: {time.time() - start_time:.3f}s")
+
+            session.execute_write(self.__load_transactions, transactions_path)
+            print(f"Time to load transactions: {time.time() - start_time:.3f}s")
 
             return time.time() - start_time

@@ -19,4 +19,4 @@ OUTPUT_DIR = os.path.join(PROJECT_ROOT, ".output")
 
 DATASET_OUTPUT_DIR = os.path.join(OUTPUT_DIR, "dataset")
 
-LOG_DIR = os.path.join(OUTPUT_DIR, "log")
+ANALYSIS_OUTPUT_DIR = os.path.join(OUTPUT_DIR, "analysis")

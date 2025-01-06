@@ -1,59 +1,42 @@
 import os
+
 from dotenv import load_dotenv
-from common.logger import logger
-from common.utils import clear_dir_path
-from config import DATASET_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
+
+from common.logger import logger, set_global_logger
+from common.utils import clear_dir_path, create_plot
+from config import OUTPUT_DIR, DATASET_OUTPUT_DIR, ANALYSIS_OUTPUT_DIR, CUSTOMERS_NUM, TERMINALS_NUM, START_DATE, R
 from script.database import DatabaseInstance
 from script.generator import Generator
 from script.loader import Loader
 from script.operation import Operations
 
 
-def main():
-    load_dotenv()
-    clear_dir_path(DATASET_OUTPUT_DIR)
-
-    db = DatabaseInstance(
-        uri=os.getenv("DATABASE_URI"),
-        user=os.getenv("DATABASE_USER"),
-        password=os.getenv("DATABASE_PASSWORD"),
-        database=os.getenv("DATABASE_NAME")
-    )
-
-    # generator = Generator(
-    #     n_customers=CUSTOMERS_NUM,
-    #     n_terminals=TERMINALS_NUM,
-    #     start_date=START_DATE,
-    #     r=R
-    # )
-    generator = Generator(
-        n_customers=100,
-        n_terminals=50,
-        start_date='2024-12-01',
-        r=50
-    )
-    loader = Loader(db)
-    operations = Operations(db)
-
-    initial_nb_days = 10
-    initial_estimated_mb_size = 50
-    for multiplier in [1, 2, 4]:
+def generate_datasets(generator: Generator,
+                      initial_nb_days: int,
+                      initial_estimated_mb_size: int,
+                      multipliers: list[int]):
+    datasets_name = []
+    for multiplier in multipliers:
         nb_days = initial_nb_days * multiplier
         estimated_mb_size = initial_estimated_mb_size * multiplier
-        dataset_name = f"dataset_{estimated_mb_size}"
-        logger.info(f"[{dataset_name}]")
+        dataset_name = f"dataset_{estimated_mb_size}MB"
+        datasets_name.append(dataset_name)
+        logger.info(f"[GENERATING '{dataset_name}']")
 
-        # Generation
-        res_generator = generator.generate(DATASET_OUTPUT_DIR, nb_days, dataset_name)
-        generation_time = res_generator["generation_time"]
+        generation_time = generator.generate(DATASET_OUTPUT_DIR, nb_days, dataset_name)
         logger.info(f"Time to generate dataset '{dataset_name}': {generation_time:.3f}s")
 
-        # Loading
+    return datasets_name
+
+
+def loading_and_operating_datasets(datasets_name: list[str], loader: Loader, operations: Operations):
+    time_results = {}
+    for dataset_name in datasets_name:
+        logger.info(f"[LOADING and OPERATING '{dataset_name}']")
         dataset_path = os.path.join(DATASET_OUTPUT_DIR, dataset_name)
         loading_time = loader.load_dataset(dataset_path)
         logger.info(f"Time to load dataset '{dataset_name}': {loading_time:.3f}s")
 
-        # Operation
         queries = {
             "a": operations.operation_a,
             "b": operations.operation_b,
@@ -62,11 +45,50 @@ def main():
             "d.ii": operations.operation_d_ii,
             "e": operations.operation_e
         }
+
+        operation_times = {}
         for name, operation in queries.items():
             execution_time = operation()["execution_time"]
+            operation_times[name] = execution_time
             logger.info(f"Time execute operation [{name}] on dataset '{dataset_name}': {execution_time:.3f}s")
 
-    # TODO: create a plot for time loading/operation
+        time_results[dataset_name] = {
+            "loading_time": loading_time,
+            "operations": operation_times
+        }
+
+    return time_results
+
+
+def main():
+    load_dotenv()
+    clear_dir_path(OUTPUT_DIR)
+    set_global_logger()
+
+    db = DatabaseInstance(
+        uri=os.getenv("DATABASE_URI"),
+        user=os.getenv("DATABASE_USER"),
+        password=os.getenv("DATABASE_PASSWORD"),
+        database=os.getenv("DATABASE_NAME")
+    )
+
+    generator = Generator(
+        n_customers=CUSTOMERS_NUM,
+        n_terminals=TERMINALS_NUM,
+        start_date=START_DATE,
+        r=R
+    )
+    loader = Loader(db)
+    operations = Operations(db)
+
+    datasets_name = generate_datasets(
+        generator,
+        initial_nb_days=100,
+        initial_estimated_mb_size=50,
+        multipliers=[1, 2, 4]
+    )
+    time_results = loading_and_operating_datasets(datasets_name, loader, operations)
+    create_plot(ANALYSIS_OUTPUT_DIR, time_results)
 
     db.close()
 

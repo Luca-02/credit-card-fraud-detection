@@ -3,6 +3,12 @@ from script.database import DatabaseInstance
 
 class Operations:
     def __init__(self, db: DatabaseInstance):
+        """
+        A class to handle some operations on the dataset loaded in the database.
+
+        :param db: Database instance.
+        """
+
         self.__db = db
 
     def operation_a(self):

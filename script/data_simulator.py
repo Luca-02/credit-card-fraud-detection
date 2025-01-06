@@ -1,6 +1,7 @@
+import random
+
 import numpy as np
 import pandas as pd
-import random
 
 
 def generate_customer_profiles_table(n_customers, random_state=0):

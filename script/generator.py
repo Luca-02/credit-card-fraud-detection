@@ -6,6 +6,16 @@ import script.data_simulator as data_simulator
 
 class Generator:
     def __init__(self, n_customers: int, n_terminals: int, start_date: str, r: int):
+        """
+        A class to handle datasets generations.
+
+        :param n_customers: Number of customers to generate.
+        :param n_terminals: Number of terminals to generate.
+        :param start_date: Starting date of the transactions that will be generated.
+        :param r: Radius within which terminals must be positioned relative to a customer's
+            coordinates to be considered for transactions.
+        """
+
         self.__n_customers = n_customers
         self.__n_terminals = n_terminals
         self.__start_date = start_date
@@ -17,7 +27,7 @@ class Generator:
         specified number of days.
 
         :param nb_days: Number of days for which transactions will be simulated.
-        :return: A tuple containing customer_profiles_table, terminal_profiles_table and transactions_df
+        :return: A tuple containing customer_profiles_table, terminal_profiles_table and transactions_df.
         """
 
         start_time = time.time()
@@ -55,15 +65,14 @@ class Generator:
 
         return customer_profiles_table, terminal_profiles_table, transactions_df
 
-    def generate(self, dataset_output_path: str, nb_days: int, dataset_name: str = None) -> dict[str, str | float]:
+    def generate(self, dataset_output_path: str, nb_days: int, dataset_name: str = None) -> float:
         """
         Generates a dataset for a specific number of days and saves it to disk at the specified path.
 
         :param dataset_output_path: Output path where the dataset will be stored.
         :param nb_days: Number of days to generate data for.
         :param dataset_name: Dataset name. If not specified, it will be based on the number of days.
-        :return: dictionary that will contain the name of the dataset, the paths where the dataset is stored and
-            the generation time.
+        :return: Generations execution time in seconds.
         """
 
         if not dataset_name:
@@ -87,7 +96,4 @@ class Generator:
 
         print(f"Time to generate and save dataset: {time.time() - start_time:.3f}s")
 
-        return {
-            "dataset_paths": dataset_subdir,
-            "generation_time": generation_time
-        }
+        return generation_time
