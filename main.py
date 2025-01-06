@@ -29,9 +29,9 @@ def generate_datasets(generator: Generator,
     return datasets_name
 
 
-def loading_and_operating_datasets(datasets_name: list[str], loader: Loader, operations: Operations):
+def loading_and_operating_datasets(loader: Loader, operations: Operations):
     time_results = {}
-    for dataset_name in datasets_name:
+    for dataset_name in os.listdir(DATASET_OUTPUT_DIR):
         logger.info(f"[LOADING and OPERATING '{dataset_name}']")
         dataset_path = os.path.join(DATASET_OUTPUT_DIR, dataset_name)
         loading_time = loader.load_dataset(dataset_path)
@@ -48,7 +48,7 @@ def loading_and_operating_datasets(datasets_name: list[str], loader: Loader, ope
 
         operation_times = {}
         for name, operation in queries.items():
-            execution_time = operation()["execution_time"]
+            execution_time = operation()
             operation_times[name] = execution_time
             logger.info(f"Time execute operation [{name}] on dataset '{dataset_name}': {execution_time:.3f}s")
 
@@ -71,7 +71,6 @@ def main():
         password=os.getenv("DATABASE_PASSWORD"),
         database=os.getenv("DATABASE_NAME")
     )
-
     generator = Generator(
         n_customers=CUSTOMERS_NUM,
         n_terminals=TERMINALS_NUM,
@@ -81,13 +80,13 @@ def main():
     loader = Loader(db)
     operations = Operations(db)
 
-    datasets_name = generate_datasets(
+    generate_datasets(
         generator,
-        initial_nb_days=100,
+        initial_nb_days=500,
         initial_estimated_mb_size=50,
         multipliers=[1, 2, 4]
     )
-    time_results = loading_and_operating_datasets(datasets_name, loader, operations)
+    time_results = loading_and_operating_datasets(loader, operations)
     create_plot(ANALYSIS_OUTPUT_DIR, time_results)
 
     db.close()

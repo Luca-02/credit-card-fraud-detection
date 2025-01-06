@@ -20,15 +20,10 @@ class Operations:
         """
 
         query = """
-        MATCH (x:Customer)-[:ACCESS_TO]->(t:Terminal)<-[:TRANSACTION]-(y:Customer)
+        MATCH (x:Customer)-[tx_x:TRANSACTION]->(t:Terminal)<-[tx_y:TRANSACTION]-(y:Customer)
         WHERE x <> y
-        WITH x, y, COUNT(DISTINCT t) AS shared_terminals
-        WHERE shared_terminals >= 3
-        WITH x, y
-        
-        MATCH (x)-[tx_x:TRANSACTION]->(t:Terminal)<-[tx_y:TRANSACTION]-(y)
-        WITH x, y, SUM(tx_x.amount) AS amount_x, SUM(tx_y.amount) AS amount_y
-        WHERE ABS(amount_x - amount_y) / amount_x < 0.1
+        WITH x, y, COUNT(DISTINCT t) AS shared_terminals, SUM(tx_x.amount) AS amount_x, SUM(tx_y.amount) AS amount_y
+        WHERE shared_terminals >= 3 AND ABS(amount_x - amount_y) / amount_x < 0.1
         RETURN x.customer_id AS customer_x, amount_x, y.customer_id AS customer_y, amount_y
         """
 
@@ -50,12 +45,12 @@ class Operations:
         WITH t, AVG(tx.amount) AS avg_amount_last_month, current_date
         
         MATCH (t)<-[tx:TRANSACTION]-(:Customer)
-        WITH t, avg_amount_last_month, current_date, tx, date(tx.datetime) as tx_datetime
+        WITH t.terminal_id AS terminal_id, avg_amount_last_month, current_date, tx, date(tx.datetime) as tx_datetime
         WHERE tx_datetime = current_date
-        WITH t, avg_amount_last_month, tx
+        WITH terminal_id, avg_amount_last_month, tx.transaction_id as transaction_id, tx.amount as amount
         
-        WHERE tx.amount - avg_amount_last_month / avg_amount_last_month > 0.2
-        RETURN t.terminal_id AS terminal_id, COLLECT(tx.transaction_id) AS possible_fraudulent_transaction
+        WHERE amount - avg_amount_last_month / avg_amount_last_month > 0.2
+        RETURN terminal_id, COLLECT(transaction_id) AS possible_fraudulent_transaction
         """
 
         return self.__db.execute_query(query, query_name="b")
@@ -108,18 +103,17 @@ class Operations:
 
         query = """
         MATCH ()-[tx:TRANSACTION]->()
-        WITH tx, time(tx.datetime).hour AS tx_hour, rand() AS products
         SET tx.period_of_day = CASE
-            WHEN tx_hour >= 6 AND tx_hour < 12 THEN 'morning'
-            WHEN tx_hour >= 12 AND tx_hour < 18 THEN 'afternoon'
-            WHEN tx_hour >= 18 AND tx_hour < 22 THEN 'evening'
+            WHEN time(tx.datetime).hour >= 6 AND time(tx.datetime).hour < 12 THEN 'morning'
+            WHEN time(tx.datetime).hour >= 12 AND time(tx.datetime).hour < 18 THEN 'afternoon'
+            WHEN time(tx.datetime).hour >= 18 AND time(tx.datetime).hour < 22 THEN 'evening'
             ELSE 'night'
         END,
         tx.product_type = CASE
-            WHEN products < 0.2 THEN 'hightech'
-            WHEN products < 0.4 THEN 'food'
-            WHEN products < 0.6 THEN 'clothing'
-            WHEN products < 0.8 THEN 'consumable'
+            WHEN rand() < 0.2 THEN 'hightech'
+            WHEN rand() < 0.4 THEN 'food'
+            WHEN rand() < 0.6 THEN 'clothing'
+            WHEN rand() < 0.8 THEN 'consumable'
             ELSE 'other'
         END,
         tx.security_feeling = toInteger(rand() * 5) + 1

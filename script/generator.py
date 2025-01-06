@@ -1,5 +1,6 @@
 import os
 import time
+import ast
 
 import script.data_simulator as data_simulator
 
@@ -41,8 +42,7 @@ class Generator:
         start_time = time.time()
         x_y_terminals = terminal_profiles_table[['x_terminal_id', 'y_terminal_id']].values.astype(float)
         customer_profiles_table['available_terminals'] = customer_profiles_table.apply(
-            lambda x: data_simulator.get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=self.__r),
-            axis=1)
+            lambda x: data_simulator.get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=self.__r), axis=1)
         customer_profiles_table['nb_terminals'] = customer_profiles_table.available_terminals.apply(len)
         print(f"Time to associate terminals to customers: {time.time() - start_time:.3f}s")
 

@@ -30,27 +30,22 @@ class DatabaseInstance:
         if self.__driver is not None:
             self.__driver.close()
 
-    def execute_query(self, query, query_name=None) -> dict[Any, float]:
+    def execute_query(self, query, query_name=None, **kwargs: Any) -> float:
         """
         Execute query on the database.
 
         :param query: Query string.
-        :param query_name: Optional parameter that identifies the query name.
-        :return: Query data result and execution time in seconds.
+        :param query_name: Optional query name.
+        :param kwargs: Query parameters.
+        :return: Query execution time in seconds.
         """
 
         with self.get_session() as session:
             start_time = time.time()
-            result = session.run(query)
-            data = result.data()
+            session.run(query, kwargs).data()
             execution_time = time.time() - start_time
 
-            if query_name is None:
-                print(f"Time to execute query: {execution_time:.3f}s")
-            else:
+            if query_name:
                 print(f"Time to execute query {query_name}: {execution_time:.3f}s")
 
-            return {
-                "result": data,
-                "execution_time": execution_time
-            }
+            return execution_time
