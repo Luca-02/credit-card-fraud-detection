@@ -11,35 +11,33 @@ from common.utils import clear_dir_path
 
 def main():
     load_dotenv()
-    clear_dir_path(OUTPUT_DIR)
+    # clear_dir_path(OUTPUT_DIR)
 
     db = DatabaseInstance(
         uri=os.getenv("DATABASE_URI"),
         user=os.getenv("DATABASE_USER"),
         password=os.getenv("DATABASE_PASSWORD"),
-        database=os.getenv("DATABASE_NAME")
+        database=os.getenv("DATABASE_NAME"),
     )
     generator = Generator(
-        n_customers=1000,
-        n_terminals=500,
+        n_customers=100,
+        n_terminals=50,
         start_date='2024-12-01',
         r=5
     )
     loader = Loader(db)
     operations = Operations(db)
 
-    generator.generate(
-        dataset_output_path=DATASET_OUTPUT_DIR,
-        nb_days=500,
-        dataset_name="dataset_test"
-    )
+    # generator.generate(
+    #     dataset_output_path=DATASET_OUTPUT_DIR,
+    #     nb_days=100,
+    #     dataset_name="dataset_test"
+    # )
+    # dataset_path = os.path.join(DATASET_OUTPUT_DIR, "dataset_50MB")
+    # loading_time = loader.load_dataset(dataset_path)
+    # print(f"Time to load dataset: {loading_time:.3f}s")
 
-    # dataset_path = os.path.join(DATASET_OUTPUT_DIR, "dataset_test")
-    # loader.load_dataset(dataset_path)
-
-    # operations.operation_a()
-    # operations.operation_b()
-    # operations.operation_c(0, 3)
+    operations.operation_b()
 
     db.close()
 

@@ -31,7 +31,7 @@ class Loader:
                 mean_nb_tx_per_day: toFloat(row.mean_nb_tx_per_day),
                 nb_terminals: toInteger(row.nb_terminals)
             })
-        } IN TRANSACTIONS OF 1000 ROWS
+        } IN TRANSACTIONS OF 10000 ROWS
         """
 
         return self.__db.execute_query(query, file_path=f"file:///{customer_profiles_path.replace(os.sep, '/')}")
@@ -45,7 +45,7 @@ class Loader:
                 x_location: toFloat(row.x_terminal_id),
                 y_location: toFloat(row.y_terminal_id)
             })
-        } IN TRANSACTIONS OF 1000 ROWS
+        } IN TRANSACTIONS OF 10000 ROWS
         """
 
         return self.__db.execute_query(query, file_path=f"file:///{terminal_profiles_path.replace(os.sep, '/')}")
@@ -76,7 +76,7 @@ class Loader:
                 amount: toFloat(row.TX_AMOUNT),
                 fraudulent: toInteger(row.TX_FRAUD) = 1
             }]->(t)
-        } IN TRANSACTIONS OF 1000 ROWS
+        } IN TRANSACTIONS OF 10000 ROWS
         """
 
         return self.__db.execute_query(query, file_path=f"file:///{transactions_path.replace(os.sep, '/')}")
@@ -91,7 +91,7 @@ class Loader:
             MATCH (c:Customer {customer_id: customer_id})
             MATCH (t:Terminal {terminal_id: terminal_id})
             CREATE (c)-[:ACCESS_TO]->(t)
-        } IN TRANSACTIONS OF 1000 ROWS
+        } IN TRANSACTIONS OF 10000 ROWS
         """
 
         return self.__db.execute_query(query, file_path=f"file:///{customer_profiles_path.replace(os.sep, '/')}")

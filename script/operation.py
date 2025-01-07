@@ -20,11 +20,16 @@ class Operations:
         """
 
         query = """
-        MATCH (x:Customer)-[tx_x:TRANSACTION]->(t:Terminal)<-[tx_y:TRANSACTION]-(y:Customer)
+        MATCH (x:Customer)-[tx_x:ACCESS_TO|TRANSACTION]->(t:Terminal)<-[tx_y:TRANSACTION]-(y:Customer)
         WHERE x <> y
-        WITH x, y, COUNT(DISTINCT t) AS shared_terminals, SUM(tx_x.amount) AS amount_x, SUM(tx_y.amount) AS amount_y
-        WHERE shared_terminals >= 3 AND ABS(amount_x - amount_y) / amount_x < 0.1
-        RETURN x.customer_id AS customer_x, amount_x, y.customer_id AS customer_y, amount_y
+        WITH x.customer_id AS customer_x,
+           y.customer_id AS customer_y,
+           SUM(COALESCE(tx_x.amount, 0)) AS amount_x,
+           SUM(tx_y.amount) AS amount_y,
+           COUNT(DISTINCT t) AS shared_terminals
+        
+        WHERE shared_terminals >= 3 AND ABS(amount_x - amount_y) < 0.1 * amount_x
+        RETURN customer_x, amount_x, customer_y, amount_y
         """
 
         return self.__db.execute_query(query, query_name="a")
@@ -49,7 +54,7 @@ class Operations:
         WHERE tx_datetime = current_date
         WITH terminal_id, avg_amount_last_month, tx.transaction_id as transaction_id, tx.amount as amount
         
-        WHERE amount - avg_amount_last_month / avg_amount_last_month > 0.2
+        WHERE amount - avg_amount_last_month > 0.2 * avg_amount_last_month
         RETURN terminal_id, COLLECT(transaction_id) AS possible_fraudulent_transaction
         """
 
@@ -103,17 +108,18 @@ class Operations:
 
         query = """
         MATCH ()-[tx:TRANSACTION]->()
+        WITH tx, time(tx.datetime).hour AS hour, rand() AS rand
         SET tx.period_of_day = CASE
-            WHEN time(tx.datetime).hour >= 6 AND time(tx.datetime).hour < 12 THEN 'morning'
-            WHEN time(tx.datetime).hour >= 12 AND time(tx.datetime).hour < 18 THEN 'afternoon'
-            WHEN time(tx.datetime).hour >= 18 AND time(tx.datetime).hour < 22 THEN 'evening'
+            WHEN hour >= 6 AND hour < 12 THEN 'morning'
+            WHEN hour >= 12 AND hour < 18 THEN 'afternoon'
+            WHEN hour >= 18 AND hour < 22 THEN 'evening'
             ELSE 'night'
         END,
         tx.product_type = CASE
-            WHEN rand() < 0.2 THEN 'hightech'
-            WHEN rand() < 0.4 THEN 'food'
-            WHEN rand() < 0.6 THEN 'clothing'
-            WHEN rand() < 0.8 THEN 'consumable'
+            WHEN rand < 0.2 THEN 'hightech'
+            WHEN rand < 0.4 THEN 'food'
+            WHEN rand < 0.6 THEN 'clothing'
+            WHEN rand < 0.8 THEN 'consumable'
             ELSE 'other'
         END,
         tx.security_feeling = toInteger(rand() * 5) + 1
@@ -131,12 +137,18 @@ class Operations:
         """
 
         query = """
-        MATCH (c1:Customer)-[tx1:TRANSACTION]->(t:Terminal)<-[tx2:TRANSACTION]-(c2:Customer)
+        MATCH (c1:Customer)-[tx1:TRANSACTION]->(t:Terminal)
+        WITH c1, t, COUNT(tx1) AS tx1_count, AVG(tx1.security_feeling) AS c1_avg_security
+        WHERE tx1_count > 3
+        WITH c1, t, c1_avg_security
+        
+        MATCH (c2:Customer)-[tx2:TRANSACTION]->(t)
         WHERE c1 <> c2
-        WITH c1, c2, 
-             COUNT(DISTINCT tx1) AS tx1_count, COUNT(DISTINCT tx2) AS tx2_count,
-             AVG(tx1.security_feeling) AS c1_avg_security, AVG(tx2.security_feeling) AS c2_avg_security
-        WHERE tx1_count > 3 AND tx2_count > 3 AND ABS(c1_avg_security - c2_avg_security) < 1
+        WITH c1, c2, c1_avg_security, COUNT(tx2) AS tx2_count, AVG(tx2.security_feeling) AS c2_avg_security
+        WHERE tx2_count > 3
+        WITH c1, c2, c1_avg_security, c2_avg_security
+
+        WHERE ABS(c1_avg_security - c2_avg_security) < 1
         MERGE (c1)-[:BUYING_FRIENDS]->(c2)
         """
 

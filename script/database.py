@@ -1,4 +1,3 @@
-import time
 from typing import Any
 
 from neo4j import GraphDatabase, Session
@@ -41,9 +40,10 @@ class DatabaseInstance:
         """
 
         with self.get_session() as session:
-            start_time = time.time()
-            session.run(query, kwargs).data()
-            execution_time = time.time() - start_time
+            result = session.run(query, kwargs).consume()
+            avail = result.result_available_after
+            cons = result.result_consumed_after
+            execution_time = (avail + cons) / 1000.0
 
             if query_name:
                 print(f"Time to execute query {query_name}: {execution_time:.3f}s")
