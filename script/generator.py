@@ -1,6 +1,5 @@
 import os
 import time
-import ast
 
 import script.data_simulator as data_simulator
 
