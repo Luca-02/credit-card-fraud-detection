@@ -149,7 +149,7 @@ class Operations:
         WITH c1, c2, c1_avg_security, c2_avg_security
 
         WHERE ABS(c1_avg_security - c2_avg_security) < 1
-        MERGE (c1)-[:BUYING_FRIENDS]->(c2)
+        MERGE (c1)-[:BUYING_FRIEND]->(c2)
         """
 
         return self.__db.execute_query(query, query_name="d.ii")

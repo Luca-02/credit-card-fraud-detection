@@ -1,24 +1,11 @@
 a)
-MATCH (x:Customer)-[:ACCESS_TO]->(t:Terminal)<-[:TRANSACTION]-(y:Customer)
-WHERE x <> y
-WITH x.customer_id AS customer_x,
-    y.customer_id AS customer_y,
-    x.mean_amount as x_amount,
-    y.mean_amount as y_amount,
-    COUNT(DISTINCT t) AS shared_terminals
-
-WHERE shared_terminals >= 3 AND ABS(x_amount - y_amount) < 0.1 * x_amount
-RETURN customer_x, x_amount, customer_y, y_amount
-
-
-
 MATCH (x:Customer)-[tx_x:ACCESS_TO|TRANSACTION]->(t:Terminal)<-[tx_y:TRANSACTION]-(y:Customer)
 WHERE x <> y
 WITH x.customer_id AS customer_x,
-   y.customer_id AS customer_y,
-   SUM(COALESCE(tx_x.amount, 0)) AS amount_x,
-   SUM(tx_y.amount) AS amount_y,
-   COUNT(DISTINCT t) AS shared_terminals
+    y.customer_id AS customer_y,
+    SUM(COALESCE(tx_x.amount, 0)) AS amount_x,
+    SUM(tx_y.amount) AS amount_y,
+    COUNT(DISTINCT t) AS shared_terminals
 
 WHERE shared_terminals >= 3 AND ABS(amount_x - amount_y) < 0.1 * amount_x
 RETURN customer_x, amount_x, customer_y, amount_y
@@ -86,18 +73,6 @@ tx.security_feeling = toInteger(rand() * 5) + 1
 
 
 d.ii)
-MATCH (c1:Customer)-[tx1:TRANSACTION]->(t:Terminal)<-[tx2:TRANSACTION]-(c2:Customer)
-WHERE c1 <> c2
-WITH c1, c2,
-     COUNT(DISTINCT tx1) AS tx1_count,
-     COUNT(DISTINCT tx2) AS tx2_count,
-     AVG(tx1.security_feeling) AS c1_avg_security,
-     AVG(tx2.security_feeling) AS c2_avg_security
-WHERE tx1_count > 3 AND tx2_count > 3 AND ABS(c1_avg_security - c2_avg_security) < 1
-MERGE (c1)-[:BUYING_FRIENDS]->(c2)
-
-
-
 MATCH (c1:Customer)-[tx1:TRANSACTION]->(t:Terminal)
 WITH c1, t, COUNT(tx1) AS tx1_count, AVG(tx1.security_feeling) AS c1_avg_security
 WHERE tx1_count > 3
@@ -110,7 +85,7 @@ WHERE tx2_count > 3
 WITH c1, c2, c1_avg_security, c2_avg_security
 
 WHERE ABS(c1_avg_security - c2_avg_security) < 1
-MERGE (c1)-[:BUYING_FRIENDS]->(c2)
+MERGE (c1)-[:BUYING_FRIEND]->(c2)
 
 
 
