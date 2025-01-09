@@ -67,9 +67,9 @@ def main():
     set_global_logger()
 
     db = DatabaseInstance(
-        uri=os.getenv("DATABASE_URI"),
-        user=os.getenv("DATABASE_USER"),
-        password=os.getenv("DATABASE_PASSWORD"),
+        uri=os.getenv("DBMS_URI"),
+        user=os.getenv("DBMS_USER"),
+        password=os.getenv("DBMS_PASSWORD"),
         database=os.getenv("DATABASE_NAME"),
     )
     generator = Generator(

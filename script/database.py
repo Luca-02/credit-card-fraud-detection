@@ -8,7 +8,7 @@ class DatabaseInstance:
         """
         A class to handle interactions with a Neo4j database instance.
 
-        :param uri: The URI of the Neo4j database.
+        :param uri: The URI of the Neo4j DBMS.
         :param user: The username for authentication.
         :param password: The password for authentication.
         :param database: The name of the Neo4j database to connect to.
