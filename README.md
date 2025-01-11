@@ -1,5 +1,8 @@
 ﻿# Credit Card Fraud Detection
 
+This is a small master's degree project that was created for the New Generation Data Models and DBMSs course (academic
+year 2024/25).
+
 This project focuses on creating a database for credit card fraud detection and creating a python script for analyzing
 various datasets generated synthetically at the beginning with respect to certain operations required to be performed on
 the designed Neo4j database.
