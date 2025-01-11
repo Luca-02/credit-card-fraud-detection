@@ -87,10 +87,10 @@ with the following characteristics:
 
 ## Output
 
-- All the final results data will be saved in the `./.output` directory, including:
-    - The generated datasets.
-    - A logging message report file.
-    - A final plot represents the execution times for the generated datasets with respect to the requested operations.
+All the final results data will be saved in the `./.output` directory, including:
+   - The generated datasets.
+   - A logging message report file.
+   - A final plot represents the execution times for the generated datasets with respect to the requested operations.
 
 ## Documentation
 
