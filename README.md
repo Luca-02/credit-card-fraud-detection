@@ -49,12 +49,11 @@ The domain is composed of three main elements:
    DATABASE_NAME=[Database name]
    ```
 
-
-4. **Run the Main Script**
-    - Start the main script:
-       ```bash
-       python main.py
-       ```
+4. **Install Dependencies**  
+   Start the main script:
+   ```bash
+   python main.py
+   ```
 
 ## Implemented Features
 
