@@ -86,7 +86,7 @@ class Loader:
         LOAD CSV WITH HEADERS FROM $file_path AS row
         CALL (row) {
             WITH toInteger(row.CUSTOMER_ID) AS customer_id,
-                apoc.convert.fromJsonList(row.available_terminals) as available_terminals
+                apoc.convert.fromJsonList(row.available_terminals) AS available_terminals
             UNWIND available_terminals AS terminal_id
             MATCH (c:Customer {customer_id: customer_id})
             MATCH (t:Terminal {terminal_id: terminal_id})
