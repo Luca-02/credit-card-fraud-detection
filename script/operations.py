@@ -42,17 +42,17 @@ class Operations:
         """
 
         query = """
-        WITH date() AS current_date, date() - duration({months: 1}) AS prev_month_date
+        WITH date() AS current_date
         
         MATCH (t:Terminal)<-[tx:TRANSACTION]-(:Customer)
-        WITH t, tx, date(tx.datetime) AS tx_datetime, current_date, prev_month_date
-        WHERE tx_datetime >= prev_month_date AND tx_datetime < current_date
+        WITH t, tx, date(tx.datetime) AS tx_datetime, current_date
+        WHERE tx_datetime >= current_date - duration({months: 2}) AND tx_datetime < current_date - duration({months: 1})
         WITH t, AVG(tx.amount) AS avg_amount_last_month, current_date
         
         MATCH (t)<-[tx:TRANSACTION]-(:Customer)
-        WITH t.terminal_id AS terminal_id, avg_amount_last_month, current_date, tx, date(tx.datetime) as tx_datetime
-        WHERE tx_datetime = current_date
-        WITH terminal_id, avg_amount_last_month, tx.transaction_id as transaction_id, tx.amount as amount
+        WITH t.terminal_id AS terminal_id, avg_amount_last_month, current_date, tx, date(tx.datetime) AS tx_datetime
+        WHERE tx_datetime >= current_date - duration({months: 1}) AND tx_datetime < current_date
+        WITH terminal_id, avg_amount_last_month, tx.transaction_id AS transaction_id, tx.amount AS amount
         
         WHERE amount - avg_amount_last_month > 0.2 * avg_amount_last_month
         RETURN terminal_id, COLLECT(transaction_id) AS possible_fraudulent_transaction
@@ -80,13 +80,13 @@ class Operations:
                 query_sections.append(f"""
                 MATCH (u{i}:Customer {{customer_id: {u_customer_id}}})-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u{i + 1}:Customer)
                 WHERE u{i}.customer_id <> u{i + 1}.customer_id
-                WITH DISTINCT u{i + 1}, [u{i}.customer_id, u{i + 1}.customer_id] as path_customers
+                WITH DISTINCT u{i + 1}, [u{i}.customer_id, u{i + 1}.customer_id] AS path_customers
                 """)
             elif i != 1:
                 query_sections.append(f"""
                 MATCH (u{i})-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u{i + 1}:Customer)
                 WHERE NOT u{i + 1}.customer_id IN path_customers
-                WITH DISTINCT u{i + 1}, path_customers + u{i + 1}.customer_id as path_customers
+                WITH DISTINCT u{i + 1}, path_customers + u{i + 1}.customer_id AS path_customers
                 """)
 
         query = '\n'.join(query_sections)

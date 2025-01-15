@@ -9,7 +9,7 @@ from config import OUTPUT_DIR, DATASET_OUTPUT_DIR, ANALYSIS_OUTPUT_DIR, \
 from script.database import DatabaseInstance
 from script.generator import Generator
 from script.loader import Loader
-from script.operation import Operations
+from script.operations import Operations
 
 
 def generate_datasets(generator: Generator,

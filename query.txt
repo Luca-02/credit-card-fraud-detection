@@ -13,38 +13,34 @@ RETURN customer_x, amount_x, customer_y, amount_y
 
 
 b)
-WITH date() AS current_date, date() - duration({months: 1}) AS prev_month_date
+WITH date() AS current_date
 
-// Trova tutte le transazioni del mese precedente per ciascun terminal
 MATCH (t:Terminal)<-[tx:TRANSACTION]-(:Customer)
-WITH t, tx, date(tx.datetime) AS tx_datetime, current_date, prev_month_date
-WHERE tx_datetime >= prev_month_date AND tx_datetime < current_date
+WITH t, tx, date(tx.datetime) AS tx_datetime, current_date
+WHERE tx_datetime >= current_date - duration({months: 2}) AND tx_datetime < current_date - duration({months: 1})
 WITH t, AVG(tx.amount) AS avg_amount_last_month, current_date
 
-// Trova tutte le transazioni del mese corrente per ciascun terminale
 MATCH (t)<-[tx:TRANSACTION]-(:Customer)
-WITH t.terminal_id AS terminal_id, avg_amount_last_month, current_date, tx, date(tx.datetime) as tx_datetime
-WHERE tx_datetime = current_date
-WITH terminal_id, avg_amount_last_month, tx.transaction_id as transaction_id, tx.amount as amount
+WITH t.terminal_id AS terminal_id, avg_amount_last_month, current_date, tx, date(tx.datetime) AS tx_datetime
+WHERE tx_datetime >= current_date - duration({months: 1}) AND tx_datetime < current_date
+WITH terminal_id, avg_amount_last_month, tx.transaction_id AS transaction_id, tx.amount AS amount
 
-// Filtra le transazioni fraudolente (importo maggiore del 20% della media precedente)
 WHERE amount - avg_amount_last_month > 0.2 * avg_amount_last_month
 RETURN terminal_id, COLLECT(transaction_id) AS possible_fraudulent_transaction
-
 
 
 c)
 MATCH (u1:Customer {customer_id: 0})-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u2:Customer)
 WHERE u1.customer_id <> u2.customer_id
-WITH DISTINCT u2, [u1.customer_id, u2.customer_id] as path_customers
+WITH DISTINCT u2, [u1.customer_id, u2.customer_id] AS path_customers
 
 MATCH (u2)-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u3:Customer)
 WHERE NOT u3.customer_id IN path_customers
-WITH DISTINCT u3, path_customers + u3.customer_id as path_customers
+WITH DISTINCT u3, path_customers + u3.customer_id AS path_customers
 
 MATCH (u3)-[:TRANSACTION]->(:Terminal)<-[:TRANSACTION]-(u4:Customer)
 WHERE NOT u4.customer_id IN path_customers
-WITH DISTINCT u4, path_customers + u4.customer_id as path_customers
+WITH DISTINCT u4, path_customers + u4.customer_id AS path_customers
 
 ...
 
@@ -90,8 +86,6 @@ MERGE (c1)-[:BUYING_FRIEND]->(c2)
 
 
 e)
-// In questo caso la media delle transazioni fraudolente per ogni periodo del giorno corrisponde
-// alla percentuale di transazioni fraudolente per ogni periodo del giorno.
 MATCH ()-[tx:TRANSACTION]->()
 RETURN tx.period_of_day AS period_of_day, COUNT(tx) AS transactions,
     AVG(CASE WHEN tx.fraudulent THEN 1 ELSE 0 END) AS avg_fraudulent_transactions

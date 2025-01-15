@@ -43,7 +43,7 @@ def create_plot(analysis_path: str, time_results: dict):
     }
 
     # Plot loading times
-    plt.figure(figsize=(16, 9))
+    plt.figure(figsize=(10, 6))
     plt.bar(datasets, load_times, label="Loading Time")
 
     # Plot operations time
